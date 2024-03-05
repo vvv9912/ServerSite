@@ -1,0 +1,756 @@
+{{define "title"}}
+Аутентификация | {{index . "name"}}
+{{end}}
+
+{{define "body"}}
+<div id="tableContainer" >
+<!--<div id="tableContainer">-->
+<table id="editableTable" border="1">
+  <thead>
+  <tr>
+    <th>Article</th>
+    <th>Catalog</th>
+    <th>Name</th>
+    <th>Description</th>
+    <th>PhotoUrl</th>
+    <th>Price</th>
+    <th>Length</th>
+    <th>Width</th>
+    <th>Height</th>
+    <th>Weight</th>
+    <th>Action</th>
+  </tr>
+  </thead>
+  <tbody>
+  <!-- Здесь будут отображаться данные из GET-запроса -->
+  </tbody>
+</table>
+  <div style="display: flex; align-items: center;">
+  <button class="same-size-button" id ="AddRowButton" onclick="addRow()">Новая запись</button>
+  <button class="same-size-button" id="saveButton" onclick="saveChanges()">Сохранить изменения в <br> базу данных</button>
+  </div>
+  <div style="clear:both;">
+  <button class="same-size-button" id="downloadDBButton" onclick="downloadDBZip()">Скачать базу данных</button>
+  </div>
+</div>
+
+<script>
+  const saveButton = document.getElementById("saveButton");
+  const AddRowButton = document.getElementById("AddRowButton");
+  const downloadDBButton = document.getElementById("downloadDBButton");
+  //
+  let data = []; // Массив для хранения данных
+  let modifiedRows = new Set(); // Множество измененных строк
+  let NewRows = new Set(); // Множество новый строк
+  //
+  function deactivateAddRowButton() {
+    AddRowButton.disabled = true;
+  }
+  function activateAddRowButton() {
+    AddRowButton.disabled = false;
+  }
+  function deactivateSaveButton() {
+    saveButton.disabled = true;
+  }
+  function activateSaveButton() {
+    saveButton.disabled = false;
+  }
+  //
+  deactivateSaveButton()
+  //
+  function fetchData() {
+    fetch('/api/get-data-db')
+            .then(response => response.json())
+            .then(jsonData => {
+              data = jsonData; // Сохранить данные
+              populateTable(); // Заполнить таблицу данными
+            })
+            .catch(error => console.error('Ошибка при получении данных:', error));
+  }
+  function openImageModal(imageSrc) {
+    const imageModal = document.getElementById('imageModal');
+    const expandedImage = document.getElementById('expandedImage');
+    const closeButton = document.getElementById('closeImageModal');
+
+    expandedImage.src = imageSrc; // Установите увеличенное изображение
+    imageModal.style.display = 'block'; // Покажите модальное окно
+
+    // Закрыть модальное окно при нажатии на крестик
+    closeButton.addEventListener('click', function() {
+      imageModal.style.display = 'none';
+    });
+  }
+
+  function populateTable() {
+    const table = document.getElementById('editableTable').getElementsByTagName('tbody')[0];
+    table.innerHTML = '';
+
+    data.forEach(item => {
+      const newRow = table.insertRow(table.rows.length);
+      const articleCell  = newRow.insertCell(0);
+      const catalogCell  = newRow.insertCell(1);
+      const nameCell  = newRow.insertCell(2);
+      const descriptionCell  = newRow.insertCell(3);
+      const photoUrlCell  = newRow.insertCell(4);
+      const priceCell  = newRow.insertCell(5);
+      const lengthCell  = newRow.insertCell(6);
+      const widthCell  = newRow.insertCell(7);
+      const heightCell  = newRow.insertCell(8);
+      const weightCell  = newRow.insertCell(9);
+      const actionCell = newRow.insertCell(10);
+
+      articleCell.innerHTML = item.article;
+      catalogCell.innerHTML = `<input type='text' value='${item.catalog}' oninput='enableSaveButton(this)'/>`;
+
+      photoUrlCell.innerHTML = '';
+      if (item.photo_url && item.photo_url.length > 0) {
+        item.photo_url.forEach((photo, index) => {
+          const imgElement = document.createElement('img');
+          const inputElement = document.createElement('input');
+          inputElement.type = 'file';
+          inputElement.accept = 'image/*';
+          inputElement.style.visibility = 'hidden';
+
+          imgElement.src = `data:image/jpeg;base64, ${photo}`;
+          imgElement.alt = 'Image';
+          imgElement.style.maxWidth = '100px';
+          imgElement.style.maxHeight = '100px';
+
+          const div = document.createElement('div');
+          div.appendChild(imgElement);
+          div.appendChild(inputElement);
+
+
+          // Создание кнопки "Удалить фото"
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Удалить фото';
+          deleteButton.style.display = 'block';
+
+          deleteButton.onclick = function() {
+            enableSaveButtonForImage(this); // Добавляем вызов enableSaveButton
+            // Удаление фото из массива item.photo_url
+            item.photo_url.splice(index, 1);
+
+            // Удаление дива из photoUrlCell
+            photoUrlCell.removeChild(div);
+
+          };
+          div.appendChild(deleteButton);
+          ///
+          inputElement.addEventListener('change', function() {
+            console.log('file input changed');
+            handlePhotoChange(this, item, index);
+            enableSaveButtonForImage(this); // Добавляем вызов enableSaveButton
+          });
+
+          const buttonElement = document.createElement('button');
+          buttonElement.textContent = 'Изменить фотографию';
+          buttonElement.style.display = 'block';
+          buttonElement.onclick = function() {
+            inputElement.click();
+          };
+          div.appendChild(buttonElement);
+
+          photoUrlCell.appendChild(div);
+
+        });
+        const div = document.createElement('div');
+        const inputElement = document.createElement('input');
+        const buttonElementAdd = document.createElement('button');
+
+        inputElement.type = 'file';
+        inputElement.accept = 'image/*';
+        inputElement.style.visibility = 'hidden';
+
+        buttonElementAdd.textContent = 'Добавить фото';
+        buttonElementAdd.onclick = function() {
+          inputElement.click();
+        };
+
+        const imagesContainer = document.createElement('div');
+        photoUrlCell.appendChild(imagesContainer);
+
+        inputElement.addEventListener('change', function(event) {
+          const imgElement = document.createElement('img');
+          imgElement.style.maxWidth = '100px';
+          imgElement.style.maxHeight = '100px';
+
+          // Создаем новый FileReader
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            // Устанавливаем data URL как src imgElement
+            imgElement.src = event.target.result;
+
+            // Создаем кнопку "Удалить фото"
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Удалить фото';
+            deleteButton.onclick = function() {
+              deletePhoto(imgElement.src, this, item);
+            };
+
+            const newDiv = document.createElement('div');
+            newDiv.appendChild(imgElement);
+            newDiv.appendChild(deleteButton);
+            imagesContainer.appendChild(newDiv); // Добавление картинки в контейнер
+          };
+
+          // Читаем файл как data URL
+          if (this.files[0]) reader.readAsDataURL(this.files[0]);
+          handlePhotoAdd(this, item);
+          enableSaveButtonForImage(this);
+
+        });
+
+        div.appendChild(inputElement);
+        div.appendChild(buttonElementAdd);
+        photoUrlCell.appendChild(div);
+      } else {
+        const div = document.createElement('div');
+        const inputElement = document.createElement('input');
+        const buttonElementAdd = document.createElement('button');
+
+        inputElement.type = 'file';
+        inputElement.accept = 'image/*';
+        inputElement.style.visibility = 'hidden';
+
+        buttonElementAdd.textContent = 'Добавить фото';
+        buttonElementAdd.onclick = function() {
+          inputElement.click();
+        };
+
+        const imagesContainer = document.createElement('div');
+        photoUrlCell.appendChild(imagesContainer);
+
+        inputElement.addEventListener('change', function(event) {
+          const imgElement = document.createElement('img');
+          imgElement.style.maxWidth = '100px';
+          imgElement.style.maxHeight = '100px';
+
+          // Создаем новый FileReader
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            // Устанавливаем data URL как src imgElement
+            imgElement.src = event.target.result;
+
+            // Создаем кнопку "Удалить фото"
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Удалить фото';
+            deleteButton.onclick = function() {
+              deletePhoto(imgElement.src, this, item);
+            };
+
+            const newDiv = document.createElement('div');
+            newDiv.appendChild(imgElement);
+            newDiv.appendChild(deleteButton);
+            imagesContainer.appendChild(newDiv); // Добавление картинки в контейнер
+          };
+
+          // Читаем файл как data URL
+          if (this.files[0]) reader.readAsDataURL(this.files[0]);
+          handlePhotoAdd(this, item);
+          enableSaveButtonForImage(this);
+
+        });
+
+        div.appendChild(inputElement);
+        div.appendChild(buttonElementAdd);
+        photoUrlCell.appendChild(div);
+
+      }
+
+
+      priceCell.innerHTML = `<input type='text' value='${item.price}' oninput='enableSaveButton(this)'/>`;
+      lengthCell.innerHTML = `<input type='text' value='${item.length}' oninput='enableSaveButton(this)'/>`;
+      widthCell.innerHTML = `<input type='text' value='${item.width}' oninput='enableSaveButton(this)'/>`;
+      heightCell.innerHTML = `<input type='text' value='${item.height}' oninput='enableSaveButton(this)'/>`;
+      weightCell.innerHTML = `<input type='text' value='${item.weight}' oninput='enableSaveButton(this)'/>`;
+
+      //Добавляем поля name, descrip
+      const nameContentEditable = document.createElement('div');
+      const descriptionContentEditable = document.createElement('div');
+      // Make them content editable
+      nameContentEditable.setAttribute('contenteditable', true);
+      descriptionContentEditable.setAttribute('contenteditable', true);
+      // Add data
+      nameContentEditable.textContent = item.name;
+      descriptionContentEditable.textContent = item.description;
+
+      nameContentEditable.addEventListener('input', function() {
+        enableSaveButton(this);
+      });
+
+      descriptionContentEditable.addEventListener('input', function() {
+        enableSaveButton(this);
+      });
+
+      // Set their outer HTML as innerHTML of the cells
+      nameCell.appendChild(nameContentEditable);
+      descriptionCell.appendChild(descriptionContentEditable);
+
+      const saveButton = document.createElement('button');
+      saveButton.textContent = 'Сохранить';
+      saveButton.onclick = function() {
+        saveRow(this);
+      };
+      saveButton.disabled = true;
+      actionCell.appendChild(saveButton);
+    });
+  }
+  //
+  function deletePhoto(src, buttonElement, item) {
+    // Удаляем URL изображения из массива item.photo_url
+    const index = item.photo_url.indexOf(src);
+    if (index !== -1) {
+      item.photo_url.splice(index, 1);
+    }
+
+    // Удаляем изображение из контейнера
+    const parentDiv = buttonElement.parentNode;
+    parentDiv.parentNode.removeChild(parentDiv);
+  }
+  //
+  function enableSaveButton(input) {
+    const row = input.parentNode.parentNode;
+    modifiedRows.add(row); // Добавить строку в множество измененных строк
+    const saveButtonCell = row.cells[10];
+    const saveButton = saveButtonCell.querySelector('button');
+    saveButton.disabled = false;
+    activateSaveButton()
+  }
+  function enableSaveButtonNewRow(input) {
+    const row = input.parentNode.parentNode;
+    NewRows.add(row); // Добавить строку в множество измененных строк
+    const saveButtonCell = row.cells[10];
+    const saveButton = saveButtonCell.querySelector('button');
+    saveButton.disabled = false;
+    activateSaveButton()
+  }
+  function enableSaveButtonForImage(input) {
+    const row = input.parentNode.parentNode.parentNode;
+    modifiedRows.add(row); // Добавить строку в множество измененных строк
+    const saveButtonCell = row.cells[10];
+    const saveButton = saveButtonCell.querySelector('button');
+    saveButton.disabled = false;
+    activateSaveButton()
+  }
+  function enableSaveButtonForImageNewRow(input) {
+    const row = input.parentNode.parentNode.parentNode;
+    NewRows.add(row); // Добавить строку в множество измененных строк
+    const saveButtonCell = row.cells[10];
+    const saveButton = saveButtonCell.querySelector('button');
+    saveButton.disabled = false;
+    activateSaveButton()
+  }
+  //
+  function handlePhotoAdd(input, item) {
+    const file = input.files[0];
+    const reader = new FileReader();
+    console.log(input.files[0]);
+
+    reader.onload = function(e) {
+      const newPhotoUrl = e.target.result;
+      if (!Array.isArray(item.photo_url)) { //проверка на массив. добавляем массив
+        item.photo_url = [];
+      }
+      item.photo_url.push(newPhotoUrl);
+
+    //  input.parentElement.querySelector('img').src = newPhotoUrl;
+      let imgElement = input.parentElement.querySelector('img');
+      if (imgElement) {
+        imgElement.src = newPhotoUrl;
+      } else {
+        console.error("No <img> element exists in the parent element of the input");
+      }
+    };
+
+    reader.onerror = function(e) {
+      console.error("An error occurred reading the file:", e);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function handlePhotoChange(input, item, imageIndex) {
+    const file = input.files[0];
+    const reader = new FileReader();
+    console.log(input.files[0]); // Должен показать объект файла, если файл был предоставлен.
+    console.log('FileReader' in window); // Должен вернуть true, если API поддерживается.
+
+    reader.onload = function(e) {
+      const newPhotoUrl = e.target.result;
+      console.log('item =',item)
+      item.photo_url[imageIndex] = newPhotoUrl;
+      // console.log(rowIndex);
+     // data[rowIndex].photo_url[imageIndex] = newPhotoUrl;
+     // modifiedRows.add(rowIndex);
+
+      // const saveButton = document.getElementById('saveButton');
+      // if (!saveButton) {
+      //   saveButton.disabled = true;
+      // }
+      input.parentElement.querySelector("button").disabled = false;
+      input.previousSibling.src = newPhotoUrl;
+    };
+
+    reader.onerror = function(e) {
+      console.error("An error occurred reading the file:", e);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  //
+  function saveRow(button) {
+    const row = button.parentNode.parentNode;
+    console.log(row)
+    const articleCell = row.cells[0].innerHTML;
+    // const id = row.cells[0].getElementsByTagName('input')[0].value;
+    const catalogCell = row.cells[1].getElementsByTagName('input')[0].value;
+    const nameCell = row.cells[2].innerText;
+    const descriptionCell = row.cells[3].innerText;
+    //photo
+    const photoCell = row.cells[4].getElementsByTagName('img');
+    let photos = [];
+    for(let i = 0; i < photoCell.length; i++){
+      photos.push(photoCell[i].src); // собираем все URL-ы картинок в массив
+    }
+    //
+    const priceCell = row.cells[5].getElementsByTagName('input')[0].value;
+    const lengthCell = row.cells[6].getElementsByTagName('input')[0].value;
+    const widthCell = row.cells[7].getElementsByTagName('input')[0].value;
+    const heightCell = row.cells[8].getElementsByTagName('input')[0].value;
+    const weightCell = row.cells[9].getElementsByTagName('input')[0].value;
+
+
+
+    // Обновить данные в массиве data
+    const recordIndex = parseInt(articleCell) - 1;
+    data[recordIndex].catalog = catalogCell;
+    data[recordIndex].name = nameCell;
+    data[recordIndex].description = descriptionCell;
+    data[recordIndex].photo = photos; // обновляем поле photo
+    data[recordIndex].price = priceCell;
+    data[recordIndex].length = lengthCell;
+    data[recordIndex].width = widthCell;
+    data[recordIndex].height = heightCell;
+    data[recordIndex].weight = weightCell;
+    // Удалить строку из множества измененных строк
+    //  modifiedRows.delete(row);
+    // Отключить кнопку "Сохранить" после сохранения изменений
+    button.disabled = true;
+    console.log('Данные, модицифированные', modifiedRows);
+  }
+
+
+  function saveRowNew(button) {
+    const row = button.parentNode.parentNode;
+    const articleCell = row.cells[0].innerHTML;
+    // const id = row.cells[0].getElementsByTagName('input')[0].value;
+    const catalogCell = row.cells[1].getElementsByTagName('input')[0].value;
+    const nameCell = row.cells[2].innerText;
+    const descriptionCell = row.cells[3].innerText;
+    //photo
+    const photoCell = row.cells[4].getElementsByTagName('img');
+    let photos = [];
+    for(let i = 0; i < photoCell.length; i++){
+      photos.push(photoCell[i].src); // собираем все URL-ы картинок в массив
+    }
+    //
+    const priceCell = row.cells[5].getElementsByTagName('input')[0].value;
+    const lengthCell = row.cells[6].getElementsByTagName('input')[0].value;
+    const widthCell = row.cells[7].getElementsByTagName('input')[0].value;
+    const heightCell = row.cells[8].getElementsByTagName('input')[0].value;
+    const weightCell = row.cells[9].getElementsByTagName('input')[0].value;
+
+   // const recordIndex = parseInt(articleCell) - 1;
+    const newItem = {
+      article: articleCell,
+      catalog: catalogCell,
+      name: nameCell,
+      description: descriptionCell,
+      photo: photos,
+      price: priceCell,
+      length: lengthCell,
+      width: widthCell,
+      height: heightCell,
+      weight: weightCell,
+    };
+    data.push(newItem);
+    button.disabled = true;
+    console.log('Данные, модицифированные', modifiedRows);
+    activateAddRowButton()
+  }
+
+  //
+  function addRow() {
+
+    const table = document.getElementById('editableTable').getElementsByTagName('tbody')[0];
+    const newRow = table.insertRow(table.rows.length);
+    const articleCell = newRow.insertCell(0);
+    const catalogCell  = newRow.insertCell(1);
+    const nameCell  = newRow.insertCell(2);
+    const descriptionCell  = newRow.insertCell(3);
+    const photoUrlCell  = newRow.insertCell(4);
+    const priceCell  = newRow.insertCell(5);
+    const lengthCell  = newRow.insertCell(6);
+    const widthCell  = newRow.insertCell(7);
+    const heightCell  = newRow.insertCell(8);
+    const weightCell  = newRow.insertCell(9);
+    const actionCell = newRow.insertCell(10);
+    console.log("data", data)
+    const len = data.length+1
+
+    articleCell.innerHTML = (len).toString();// Можно оставить пустым или сгенерировать уникальный ID
+    // idCell.innerHTML = '4'; // Можно оставить пустым или сгенерировать уникальный ID
+    // idCell.innerHTML = "<input type='text' />"; // Редактируем ID
+    catalogCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+
+    const nameContentEditable = document.createElement('div');
+    const descriptionContentEditable = document.createElement('div');
+    nameContentEditable.setAttribute('contenteditable', true);
+    descriptionContentEditable.setAttribute('contenteditable', true);
+    // Add data
+    nameContentEditable.textContent = "";
+    descriptionContentEditable.textContent = "";
+
+    nameContentEditable.addEventListener('input', function() {
+      enableSaveButtonNewRow(this);
+    });
+
+    descriptionContentEditable.addEventListener('input', function() {
+      enableSaveButtonNewRow(this);
+    });
+
+    // Set their outer HTML as innerHTML of the cells
+    nameCell.appendChild(nameContentEditable);
+    descriptionCell.appendChild(descriptionContentEditable);
+
+
+    //descriptionCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+
+    priceCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+    lengthCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+    widthCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+    heightCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+    weightCell.innerHTML = `<input type='text' oninput='enableSaveButtonNewRow(this)'/>`;
+
+    const item = {photo_url: []};
+
+    const div = document.createElement('div');
+    const inputElement = document.createElement('input');
+    const buttonElementAdd = document.createElement('button');
+
+    //
+    inputElement.type = 'file';
+    inputElement.accept = 'image/*';
+    inputElement.style.visibility = 'hidden';
+
+    buttonElementAdd.textContent = 'Добавить фото';
+    buttonElementAdd.onclick = function() {
+      inputElement.click();
+    };
+
+    const imagesContainer = document.createElement('div');
+    photoUrlCell.appendChild(imagesContainer);
+
+    inputElement.addEventListener('change', function(event) {
+      const imgElement = document.createElement('img');
+      imgElement.style.maxWidth = '100px';
+      imgElement.style.maxHeight = '100px';
+
+      // Создаем новый FileReader
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        // Устанавливаем data URL как src imgElement
+        imgElement.src = event.target.result;
+
+        // Создаем кнопку "Удалить фото"
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Удалить фото';
+        deleteButton.onclick = function() {
+          deletePhoto(imgElement.src, this, item);
+        };
+
+        const newDiv = document.createElement('div');
+        newDiv.appendChild(imgElement);
+        newDiv.appendChild(deleteButton);
+        imagesContainer.appendChild(newDiv); // Добавление картинки в контейнер
+      };
+
+      // Читаем файл как data URL
+      if (this.files[0]) reader.readAsDataURL(this.files[0]);
+      handlePhotoAdd(this, item);
+      enableSaveButtonForImageNewRow(this);
+
+    });
+
+    div.appendChild(inputElement);
+    div.appendChild(buttonElementAdd);
+    photoUrlCell.appendChild(div);
+    //
+
+    actionCell.innerHTML = "<button onclick='saveRowNew(this)'>Сохранить</button>";
+    deactivateAddRowButton()
+  }
+  // Сохранение в бд
+  function saveChanges() {
+    console.log("mod = ", modifiedRows)
+    console.log("new = ", NewRows)
+    let result
+    if (modifiedRows.size !== 0) {
+      result = saveChangesData();
+      if (result != 1) {
+        console.log("Ошибка при изменении данных");
+      }
+    }
+    if (NewRows.size !== 0){
+      result = saveNewData();
+      if (result !== 1) {
+        console.log("Ошибка при сохранении новых данных");
+      }
+    }
+    if (result !== 1) {
+      console.log("Ошибка при сохранении данных");
+      alert("Ошибка при изменении данных");
+    }  else {
+      alert("Новые данные успешно сохранены");
+    }
+  }
+  function saveChangesData() {
+
+    console.log('модифицированные данные:', modifiedRows)
+    const changedData = Array.from(modifiedRows).map(row => {
+      console.log(row);
+      const article = parseInt(row.cells[0].innerHTML);
+      const catalog = row.cells[1].getElementsByTagName('input')[0].value;
+      const name = row.cells[2].innerText;
+      const description = row.cells[3].innerText;
+      const photoCell = row.cells[4].getElementsByTagName('img');
+      let photo_url = [];
+      for(let i = 0; i < photoCell.length; i++){
+        photo_url.push(photoCell[i].src); // собираем все URL-ы картинок в массив
+      }
+
+      //
+      const price = parseFloat(row.cells[5].getElementsByTagName('input')[0].value);
+      const length = parseInt(row.cells[6].getElementsByTagName('input')[0].value);
+      const width = parseInt(row.cells[7].getElementsByTagName('input')[0].value);
+      const height = parseInt(row.cells[8].getElementsByTagName('input')[0].value);
+      const weight = parseInt(row.cells[9].getElementsByTagName('input')[0].value);
+
+      return { article, catalog, name, description, photo_url,price,length,width,height,weight};
+    });
+    // Вывести данные в консоль
+    console.log('Данные модифиц, отправляемые в POST-запросе:', changedData);
+    // Выполнить POST-запрос только с измененными данными
+
+    fetch('/api/save-change-bd/change', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(changedData)
+    })
+            .then(response => {
+              if (response.status === 200) {
+                deactivateSaveButton();
+                console.log('Изменения сохранены успешно.');
+                modifiedRows.clear();
+                alert("Изменения сохранены успешно.");
+
+                return 1;
+              } else {
+                console.error('Ошибка при отправке данных на сервер:', response.status);
+                alert("Ошибка при отправке данных на сервер: " + response.status);
+                return 0;
+              }
+            })
+            .catch(error => {
+              console.error('Ошибка при отправке данных на сервер:', error);
+              alert("Ошибка при отправке данных на сервер: " + error);
+              return 0;
+            });
+    return 1;
+  }
+  function saveNewData() {
+
+    console.log('Новые данные:', NewRows)
+    const changedData = Array.from(NewRows).map(row => {
+      console.log(row);
+      const article = parseInt(row.cells[0].innerHTML);
+      const catalog = row.cells[1].getElementsByTagName('input')[0].value;
+      const name = row.cells[2].innerText;
+      const description = row.cells[3].innerText;
+      const photoCell = row.cells[4].getElementsByTagName('img');
+      let photo_url = [];
+      for (let i = 0; i < photoCell.length; i++) {
+        photo_url.push(photoCell[i].src); // собираем все URL-ы картинок в массив
+      }
+
+      //
+      const price = parseFloat(row.cells[5].getElementsByTagName('input')[0].value);
+      const length = parseInt(row.cells[6].getElementsByTagName('input')[0].value);
+      const width = parseInt(row.cells[7].getElementsByTagName('input')[0].value);
+      const height = parseInt(row.cells[8].getElementsByTagName('input')[0].value);
+      const weight = parseInt(row.cells[9].getElementsByTagName('input')[0].value);
+
+      return {article, catalog, name, description, photo_url, price, length, width, height, weight};
+    });
+    // Вывести данные в консоль
+    console.log('Данные новые, отправляемые в POST-запросе:', changedData);
+
+    // Выполнить POST-запрос только с измененными данными
+    fetch('/api/save-change-bd/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(changedData)
+    })
+            .then(response => {
+              if (response.status === 200) {
+                console.log('Изменения сохранены успешно.');
+                NewRows.clear();
+                alert("Изменения сохранены успешно.");
+                deactivateSaveButton();
+                return 1;
+              } else {
+                console.error('Ошибка при отправке данных на сервер:', response.status);
+                alert("Ошибка при отправке данных на сервер: " + response.status);
+                return 0;
+              }
+            })
+            .catch(error => {
+              console.error('Ошибка при отправке данных на сервер:', error);
+              alert("Ошибка при отправке данных на сервер: " + error);
+              return 0;
+            });
+    return 1
+  }
+
+ function downloadDBZip() {
+   fetch('/api/get-file-bd')
+           .then(response => {
+             if (response.ok) {
+               return response.blob(); // Получить содержимое архива как Blob
+             } else {
+               throw new Error('Ошибка при загрузке архива');
+             }
+           })
+           .then(blob => {
+             const url = window.URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = 'bd.zip'; // Установите имя файла для скачивания
+             document.body.appendChild(a);
+             a.click();
+             window.URL.revokeObjectURL(url);
+           })
+           .catch(error => console.error('Ошибка при загрузке архива:', error));
+ }
+
+  // При загрузке страницы вызываем функцию для загрузки данных
+  fetchData();
+</script>
+
+{{end}}
