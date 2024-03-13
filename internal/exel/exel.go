@@ -26,7 +26,7 @@ func (e *Excel) CloseFile() {
 }
 
 func (e *Excel) WriteStamp(sheet string) {
-	//sheet := "Catalog"
+
 	index, err := e.f.NewSheet(sheet)
 	if err != nil {
 		log.Println(err)

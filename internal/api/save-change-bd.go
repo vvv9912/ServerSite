@@ -87,7 +87,6 @@ func (s *Api) PostChangeBD(c echo.Context) error {
 			encodedString := strings.TrimPrefix(base64Img, prefix)
 			data, _ := base64.StdEncoding.DecodeString(encodedString)
 			photosBytes = append(photosBytes, data)
-			// Теперь `data` содержит байтовый массив изображения
 		}
 
 		err = s.Storage.ChangeProductByArticle(context.TODO(), model.Products{
