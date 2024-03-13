@@ -6,13 +6,7 @@ import (
 	"net/http"
 )
 
-// токен(key) -> id
-type Cacher interface {
-	GetToken(token string) (string, bool)
-	NewToken(Token string, ID string) error
-}
 type MW struct {
-	//c Cacher
 	*service.Service
 }
 
@@ -25,10 +19,13 @@ func (m *MW) CheckAuthorization(next echo.HandlerFunc) echo.HandlerFunc {
 
 		if len(c.Cookies()) != 0 {
 			token, err := c.Cookie("jwt")
+
 			id, role, err := m.Authorization.GetUserId(token.Value)
+
 			if err != nil {
 				return c.Redirect(http.StatusTemporaryRedirect, "/auth")
 			}
+
 			ok, roleDb, err := m.DbUser.CheckId(id)
 			if err != nil || !ok {
 				return c.Redirect(http.StatusTemporaryRedirect, "/auth")
