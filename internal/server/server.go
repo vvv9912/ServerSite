@@ -37,8 +37,6 @@ func NewServer(api *api.Api) *Server {
 
 	templates := make(map[string]*template.Template)
 
-	//templates["auth.html"] = template.Must(template.ParseFiles(path.Join("static", "templates", "auth.html"), path.Join("static", "templates", "base.html")))
-	//templates["auth2.html"] = template.Must(template.ParseFiles(path.Join("static", "templates", "auth2.html"), path.Join("static", "templates", "base.html")))
 	templates["auth3.html"] = template.Must(template.ParseFiles(path.Join("static", "templates", "auth3.html"), path.Join("static", "templates", "base.html")))
 	templates["bd.html"] = template.Must(template.ParseFiles(path.Join("static", "templates", "bd.html"), path.Join("static", "templates", "base.html")))
 
