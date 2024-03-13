@@ -55,7 +55,6 @@ func NewServer(api *api.Api) *Server {
 
 	s.echo.POST("/api/post-auth", api.PostAuth)
 	s.echo.GET("/api/get-data-db", api.GetDataDb, mw.CheckAuthorization)
-	s.echo.GET("/api/get-data", api.GetData, mw.CheckAuthorization)
 	s.echo.GET("/api/get-file-bd", api.GetDownloadDB, mw.CheckAuthorization)
 
 	s.echo.POST("/api/save-change-bd/change", api.PostChangeBD, mw.CheckAuthorization)
