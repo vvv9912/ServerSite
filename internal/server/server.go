@@ -46,12 +46,8 @@ func NewServer(api *api.Api) *Server {
 
 	mw := mw.NewMW(api.Service)
 
-	//s.echo.GET("/auth", api.AuthHandler)
-	//s.echo.GET("/auth2", api.AuthHandler2)
 	s.echo.GET("/auth", api.AuthHandler3)
 	s.echo.GET("/bd", api.BdHandler, mw.CheckAuthorization)
-
-	//	s.echo.Use(mw.Authorization)
 
 	s.echo.POST("/api/post-auth", api.PostAuth)
 	s.echo.GET("/api/get-data-db", api.GetDataDb, mw.CheckAuthorization)
@@ -63,8 +59,6 @@ func NewServer(api *api.Api) *Server {
 }
 
 func (s *Server) ServerStart(ctx context.Context, addr string) error {
-	//err := s.echo.Start("172.17.0.2:8080")
-
 	err := s.echo.Start(addr)
 	defer s.echo.Close()
 	return err
