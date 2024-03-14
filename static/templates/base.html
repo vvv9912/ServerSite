@@ -1,0 +1,25 @@
+{{define "base.html"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{template "title" .}}</title>
+    <link rel="stylesheet" type="text/css" href="{{.CSSPath}}">
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous">
+            //src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.js"></script>
+
+</head>
+<body>
+<!--<div id="page-container">-->
+    <!-- Ваш текущий HTML-код здесь -->
+
+{{template "body" .}}
+<!--</div>-->
+</body>
+</html>
+{{end}}

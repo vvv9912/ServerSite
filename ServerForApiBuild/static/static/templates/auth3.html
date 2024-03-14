@@ -1,0 +1,90 @@
+{{define "title"}}
+Аутентификация | {{index . "name"}}
+{{end}}
+
+{{define "body"}}
+
+
+
+<body>
+<div class="login">
+    <h1>Hi, User!</h1>
+
+    <form id="loginForm">
+        <table>
+            <tr>
+                <th>
+                    <input type="text" id="username" name="user" placeholder="Username" required="required" />
+                </th>
+                <th>
+                    <input type="password" id="password" name="password" placeholder="Password" required="required" />
+                </th>
+            </tr>
+        </table>
+        <button type="submit" class="btn btn-primary btn-block btn-large">Login</button>
+    </form>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $("#loginForm").submit(function(event) {
+            event.preventDefault(); // Предотвратить отправку формы по умолчанию
+            var login2 = $("#username").val();
+            var password2 = $("#password").val();
+            // var hashedPassword = CryptoJS.SHA256(password2).toString();
+            $.ajax({
+                type: "POST",
+                url: "/api/post-auth",
+                data: JSON.stringify({ login_login: login2, password_password: password2 }),
+                processData: false,
+                contentType: "application/json",
+                dataType: "json",
+                xhrFields: { withCredentials: true }
+            })
+                .done(function(data) {
+                    if (data.success) {
+                        $("#form-result").text(JSON.stringify(data, null, 2));
+
+                        // Установка куки jwt в браузере
+                        document.cookie = "jwt=" + data.jwt;
+
+                        // Переадресация на /bd с кукой jwt
+                        window.location.href = "/bd";
+                    } else {
+                        $("#form-result").text("POST request failed!");
+                    }
+                }) .fail(function(data) {
+                $("#form-result").text("POST request failed!");
+            });
+
+
+
+            // $.ajax({
+            //     type: "POST",
+            //     url: "/api/post-auth",
+            //     data: JSON.stringify({
+            //         login_login: login2,
+            //         password_password: password2
+            //     }),
+            //     processData: false,
+            //     contentType: "application/json",
+            //     dataType: "json",
+            //     xhrFields: {
+            //         withCredentials: true
+            //     }
+            // })
+            //     .done(function(data) {
+            //         if (data.success) {
+            //             $("#form-result").text(JSON.stringify(data, null, 2));
+            //             window.location.href = "/bd";
+            //         } else {
+            //             $("#form-result").text(data.success);
+            //         }
+            //     })
+
+        });
+    });
+</script>
+</body>
+</html>
+{{end}}

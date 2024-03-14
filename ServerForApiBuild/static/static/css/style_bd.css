@@ -1,0 +1,86 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+/*#parentElement {*/
+/*    */
+/*}*/
+
+/*button {*/
+/*    font-size: 16px; !* Изменяет размер текста *!*/
+/*    width: 600px; !* Изменяет ширину кнопки *!*/
+/*    height: 150px; !* Изменяет высоту кнопки *!*/
+/*}*/
+/**/
+.same-size-button {
+    width: 200px;
+    height: 45px;
+    background-color: #4CAF50; /* выберите цвет фона */
+    color: white; /* выберите цвет текста */
+    border: 1px solid #000000; /* добавьте окантовку: ширину, стиль и цвет */
+    border-radius: 4px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+
+.same-size-button:hover {
+    background-color: #1c421d; /* выберите цвет фона при наведении */
+}
+
+.same-size-button:active {
+    background-color: #1e481f; /* выберите цвет фона при активации */
+}
+.same-size-button:disabled {
+    background-color: #7f8c8d; /* #ff0005 выберите цвет заднего фона, когда кнопка неактивна */
+    color: #ecf0f1; /* выберите цвет текста, когда кнопка неактивна */
+}
+/*//*/
+#editableTable td {
+    color: #ffffff;
+}
+#editableTable tr {
+    color: #ffffff;
+}
+
+#tableContainer {
+    height: auto;
+    width: auto;
+    overflow: auto;
+}
+
+#editableTable {
+    overflow-y: scroll;
+    height: 100%; /* Весь контейнер будет использован для таблицы */
+    /* Другие стили по вашему выбору */
+}
+
+body {
+    overflow-y: scroll;
+    width: 100%;
+    height: 100%;
+    font-family: 'Open Sans', sans-serif;
+    background: #092756;
+    background: -moz-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%),
+    -moz-linear-gradient(top,  rgba(57,173,219,.25) 0%, rgba(42,60,87,.4) 100%),
+    -moz-linear-gradient(-45deg,  #670d10 0%, #092756 100%);
+    background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%),
+    -webkit-linear-gradient(top,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%),
+    -webkit-linear-gradient(-45deg,  #670d10 0%,#092756 100%);
+    background: -o-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -o-linear-gradient(top,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -o-linear-gradient(-45deg,  #670d10 0%,#092756 100%);
+    background: -ms-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), -ms-linear-gradient(top,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), -ms-linear-gradient(-45deg,  #670d10 0%,#092756 100%);
+    background: -webkit-radial-gradient(0% 100%, ellipse cover, rgba(104,128,138,.4) 10%,rgba(138,114,76,0) 40%), linear-gradient(to bottom,  rgba(57,173,219,.25) 0%,rgba(42,60,87,.4) 100%), linear-gradient(135deg,  #670d10 0%,#092756 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3E1D6D', endColorstr='#092756',GradientType=1 );
+}
+.login {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -150px 0 0 -150px;
+    width:300px;
+    height:300px;
+}
+.login h1 { color: #fff; text-shadow: 0 0 10px rgba(0,0,0,0.3); letter-spacing:1px; text-align:center; }
+
+
+input:focus { box-shadow: inset 0 -5px 45px rgba(100,100,100,0.4), 0 1px 1px rgba(255,255,255,0.2); }
