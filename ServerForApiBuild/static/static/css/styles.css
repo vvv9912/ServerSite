@@ -1,0 +1,44 @@
+/* styles.css */
+#page-container {
+    height: 100%; /* Задайте высоту контейнера, чтобы он занимал всю доступную высоту экрана */
+    overflow-y: scroll; /* Разрешите вертикальную прокрутку */
+    /* Другие стили по вашему выбору */
+}
+/* Стили для заголовков */
+h1 {
+    color: red;
+    font-size: 56px;
+}
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+table th, table td {
+    word-wrap: break-word;
+}
+
+table th {
+    white-space: nowrap;
+}
+/*!* Стили для абзацев *!*/
+/*p {*/
+/*    color: green;*/
+/*    font-size: 16px;*/
+/*}*/
+
+/*!* Стили для ссылок *!*/
+/*a {*/
+/*    text-decoration: none;*/
+/*    color: red;*/
+/*}*/
+
+/*!* Стили для кнопок *!*/
+/*.button {*/
+/*    background-color: #ff6600;*/
+/*    color: #fff;*/
+/*    padding: 10px 20px;*/
+/*    border: none;*/
+/*    border-radius: 5px;*/
+/*    cursor: pointer;*/
+/*}*/

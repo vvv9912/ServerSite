@@ -1,0 +1,61 @@
+{{define "title"}}
+Аутентификация | {{index . "name"}}
+{{end}}
+
+{{define "body"}}
+<h1>Аутентификация </h1>
+
+<link rel="stylesheet" type="text/css" href="{{.CSSPath}}">
+<!-- HTML form -->
+
+<form id="post-full-name-form">
+    <input type="text" id="loginn" placeholder="login">
+    <input type="password" id="passwordd" placeholder="password">
+    <button type="button" id="submit-btn">Submit</button>
+</form>
+
+<div id="success-message" style="display: none;">
+    <p>Request successful!</p>
+    <button id="redirect-btn">Go to next URL</button>
+</div>
+
+<!-- Print the response after the jQuery ajax request -->
+<pre id="form-result"></pre>
+
+<script type="text/javascript">
+    // Send a ajax request when the submit button is clicked
+    $("#submit-btn").on("click", function(){
+        var login2 = $("#loginn").val();
+        var password2 = $("#passwordd").val();
+        // var hashedPassword = CryptoJS.SHA256(password2).toString();
+        $.ajax({
+            type: "POST",
+            url: "/api/post-auth",
+            data: JSON.stringify({
+                login_login: login2,
+                password_password: password2 //хешированный пароль
+            }),
+            processData: false,
+            contentType: "application/json",
+            dataType: "json"
+        }).done(
+            function(data){ //Если запрос успешен (статусы 200)
+               if (data.success) { //Если поле success (в ответе json) равно true
+               $("#form-result").text(JSON.stringify(data, null, 2)); //Эта функция преобразует JavaScript-объект data в строку JSON. Параметр null означает, что не используется функция для изменения результатов преобразования. Последний параметр 2 указывает на использование отступа в 2 пробела для форматирования JSON строки, делая ее более читаемой.
+                // Show success message and redirect button
+                $("#success-message").show(); //Показываем кнопку
+                $("#redirect-btn").on("click", function() { //присваеваем ей редирект на другую страницу
+                    window.location.href = "https://example.com/next-url";
+                });
+               } else {
+                   $("#form-result").text(data.success);
+               }
+            }
+        ).fail(
+            function(data){
+                $("#form-result").text("POST request failed!");
+            }
+        )
+    });
+</script>
+{{end}}
