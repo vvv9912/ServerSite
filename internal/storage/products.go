@@ -44,7 +44,10 @@ func (s *ProductsPostgresStorage) AddProduct(ctx context.Context, product model.
 	); err != nil {
 		return err
 	}
-	log.Println("insert BD:", product.Article, product.Name, "len:photo", len(product.PhotoUrl))
+	log.Println("----\ninsert BD:", product.Article, product.Name, "len:photo", len(product.PhotoUrl))
+	for i, v := range product.PhotoUrl {
+		log.Println("size: i=", i, ", size = ", len(v))
+	}
 	return nil
 
 }
@@ -83,7 +86,11 @@ func (s *ProductsPostgresStorage) ChangeProductByArticle(ctx context.Context, pr
 	if rowsAffected == 0 {
 		return errors.New("no rows updated, article not found")
 	}
-	log.Println("update BD:", product.Article, product.Name, "len:photo", len(product.PhotoUrl))
+
+	log.Println("----\nupdate BD:", product.Article, product.Name, "len:photo", len(product.PhotoUrl))
+	for i, v := range product.PhotoUrl {
+		log.Println("size: i=", i, ", size = ", len(v))
+	}
 	return nil
 }
 func (s *ProductsPostgresStorage) Catalog(ctx context.Context) ([]string, error) {

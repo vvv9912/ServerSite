@@ -1,6 +1,7 @@
 package api
 
 import (
+	"ServerSite/internal/logger"
 	"ServerSite/internal/model"
 	"context"
 	"encoding/base64"
@@ -29,14 +30,36 @@ func (s *Api) PostNewAddBD(c echo.Context) error {
 		return err
 	}
 
-	photosBytes := make([][]byte, 0)
 	for i, product := range a {
-		log.Println("POST:save:", product.Article, product.Name, "len:photo", len(product.PhotoUrl))
+		photosBytes := make([][]byte, 0)
+		logger.Log.CustomInfo("Post save", map[string]interface{}{
+			"article":   product.Article,
+			"catalog":   product.Catalog,
+			"name":      product.Name,
+			"lenPhoto":  len(product.PhotoUrl),
+			"sizePhoto": len(product.PhotoUrl[i]),
+		})
+
 		for _, base64Img := range product.PhotoUrl {
 			prefix := "data:image/jpeg;base64,"
 			encodedString := strings.TrimPrefix(base64Img, prefix)
-			data, _ := base64.StdEncoding.DecodeString(encodedString)
+			//todo
+			if len(encodedString) > 0 && encodedString[0] == ' ' {
+				encodedString = strings.TrimSpace(encodedString)
+			}
+			data, err := base64.StdEncoding.DecodeString(encodedString)
+			if err != nil {
+				logger.Log.AddOriginalError(err).CustomError("Err base64 encoding", map[string]interface{}{
+					"encodedString": encodedString,
+				})
+				return err
+			}
 			photosBytes = append(photosBytes, data)
+		}
+		for k := range photosBytes {
+			logger.Log.CustomInfo("SizePhoto", map[string]interface{}{
+				"sizePhoto": photosBytes[k],
+			})
 		}
 
 		err = s.Storage.AddProduct(context.TODO(), model.Products{
@@ -55,7 +78,7 @@ func (s *Api) PostNewAddBD(c echo.Context) error {
 			fmt.Println(err)
 			return err
 		}
-		photosBytes = make([][]byte, 0)
+
 	}
 
 	return c.JSONBlob(
@@ -81,12 +104,36 @@ func (s *Api) PostChangeBD(c echo.Context) error {
 	}
 	photosBytes := make([][]byte, 0)
 	for i, product := range a {
-		log.Println("POST:changed:", product.Article, product.Name, "len:photo", len(product.PhotoUrl))
+
+		logger.Log.CustomInfo("Post changed", map[string]interface{}{
+			"article":   product.Article,
+			"catalog":   product.Catalog,
+			"name":      product.Name,
+			"lenPhoto":  len(product.PhotoUrl),
+			"sizePhoto": len(product.PhotoUrl[i]),
+		})
+
 		for _, base64Img := range product.PhotoUrl {
 			prefix := "data:image/jpeg;base64,"
 			encodedString := strings.TrimPrefix(base64Img, prefix)
-			data, _ := base64.StdEncoding.DecodeString(encodedString)
+			//todo
+			if len(encodedString) > 0 && encodedString[0] == ' ' {
+				encodedString = strings.TrimSpace(encodedString)
+			}
+
+			data, err := base64.StdEncoding.DecodeString(encodedString)
+			if err != nil {
+				logger.Log.AddOriginalError(err).CustomError("Err base64 encoding", map[string]interface{}{
+					"encodedString": encodedString,
+					"base64Img":     base64Img})
+				return err
+			}
 			photosBytes = append(photosBytes, data)
+		}
+		for k := range photosBytes {
+			logger.Log.CustomInfo("SizePhoto", map[string]interface{}{
+				"sizePhoto": photosBytes[k],
+			})
 		}
 
 		err = s.Storage.ChangeProductByArticle(context.TODO(), model.Products{

@@ -10,6 +10,7 @@ import (
 type Config struct {
 	DatabaseDSN   string `hcl:"database_dsn" env:"DATABASE_DSN" `
 	ServerAddress string `hcl:"server_address,omitempty" env:"SERVER_ADDRESS"`
+	PathFileLog   string `hcl:"PathFileLog,omitempty" env:"Path_File_Log"`
 }
 
 var (
